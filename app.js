@@ -1,3 +1,5 @@
+import { addTimestampToMessage } from './utils.js';
+
 var canvas = document.querySelector('canvas');
 var statusText = document.querySelector('#statusText');
 
@@ -6,17 +8,25 @@ const deviceNamePrefix = 'Motion'
 const serviceUuid = 'a4de0101-a156-493c-83d8-845c40da5203';
 const txCharacteristicUuid = 'a4de0102-a156-493c-83d8-845c40da5203';
 
+
 statusText.addEventListener('click', function () {
     statusText.textContent = 'Breathe...';
     notifications = [];
     bluetoothStreamService.connect(deviceNamePrefix, serviceUuid)
-        .then(() => bluetoothStreamService.subscribeToNotifications(serviceUuid, txCharacteristicUuid))
+        .then(() => {
+            // Add event listener for device disconnection
+            bluetoothStreamService.device.addEventListener('gattserverdisconnected', onDisconnected);
+
+            // Subscribe to notifications
+            return bluetoothStreamService.subscribeToNotifications(serviceUuid, txCharacteristicUuid);
+        })
         .then(characteristic => {
             handleNotification(characteristic);
         })
         .catch(error => {
             statusText.textContent = `Error: ${error}`;
         });
+
 });
 
 function handleNotification(notification) {
@@ -26,6 +36,10 @@ function handleNotification(notification) {
         notifications.push(notification);
         drawWaves();
     });
+}
+
+function onDisconnected(event) {
+    console.log(addTimestampToMessage('Disconnected from device'));
 }
 
 var notifications = [];

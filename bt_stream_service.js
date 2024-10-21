@@ -1,3 +1,5 @@
+import { addTimestampToMessage } from './utils.js';
+
 (function () {
     'use strict';
 
@@ -23,10 +25,11 @@
                     return device.gatt.connect();
                 })
                 .then(server => {
+                    console.log(addTimestampToMessage('Connected to device'))
                     this.server = server;
                 })
                 .catch(error => {
-                    console.error('Error in connect():', error);
+                    console.error(addTimestampToMessage('Error in connect(): ' + error));
                 });
         }
 
@@ -47,7 +50,7 @@
                     // Start notifications for the characteristic
                     return characteristic.startNotifications()
                         .then(() => {
-                            console.log('Notifications started for characteristic:', characteristicUuid);
+                            console.log(addTimestampToMessage('Notifications started for characteristic: ' + characteristicUuid));
                             return characteristic;
                         });
                 });
@@ -57,7 +60,7 @@
             // In Chrome 50+, a DataView is returned instead of an ArrayBuffer.
             value = value.buffer ? value : new DataView(value);
             let oneByteValue = value.getUint8(0);
-            console.log('Notification value:', oneByteValue);
+            console.log(addTimestampToMessage('Notification value: ' + oneByteValue));
 
             return oneByteValue;
         }
