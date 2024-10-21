@@ -1,18 +1,21 @@
 (function () {
     'use strict';
 
-    class HeartRateSensor {
+    class BluetoothStreamService {
         constructor() {
             this.device = null;
             this.server = null;
             this._characteristics = new Map();
         }
-        connect() {
+
+        connect(deviceNamePrefix, serviceUuid) {
             let filters = [];
             let options = {};
-            // TODO (DP): Change to actual device name
-            filters.push({ namePrefix: 'Motion' });
+            filters.push({ namePrefix: deviceNamePrefix });
             options.filters = filters;
+
+            // Add required service UUIDs to optionalServices
+            options.optionalServices = [serviceUuid];
 
             return navigator.bluetooth.requestDevice(options)
                 .then(device => {
@@ -21,54 +24,42 @@
                 })
                 .then(server => {
                     this.server = server;
-                    return server.getPrimaryService('heart_rate');
                 })
+                .catch(error => {
+                    console.error('Error in connect():', error);
+                });
+        }
+
+        subscribeToNotifications(serviceUuid, characteristicUuid) {
+            return this.server.getPrimaryService(serviceUuid)
                 .then(service => {
-                    return this._cacheCharacteristic(service, 'heart_rate_measurement');
+                    // Cache the characteristic for future use
+                    return this._cacheCharacteristic(service, characteristicUuid);
                 })
+                .then(() => {
+                    // Retrieve the cached characteristic
+                    const characteristic = this._characteristics.get(characteristicUuid);
+
+                    if (!characteristic) {
+                        return Promise.reject(new Error(`Characteristic ${characteristicUuid} not found.`));
+                    }
+
+                    // Start notifications for the characteristic
+                    return characteristic.startNotifications()
+                        .then(() => {
+                            console.log('Notifications started for characteristic:', characteristicUuid);
+                            return characteristic;
+                        });
+                });
         }
 
-        /* Heart Rate Service */
-
-        startNotificationsHeartRateMeasurement() {
-            return this._startNotifications('heart_rate_measurement');
-        }
-        stopNotificationsHeartRateMeasurement() {
-            return this._stopNotifications('heart_rate_measurement');
-        }
-        parseHeartRate(value) {
+        parseNotification(value) {
             // In Chrome 50+, a DataView is returned instead of an ArrayBuffer.
             value = value.buffer ? value : new DataView(value);
-            let flags = value.getUint8(0);
-            let rate16Bits = flags & 0x1;
-            let result = {};
-            let index = 1;
-            if (rate16Bits) {
-                result.heartRate = value.getUint16(index, /*littleEndian=*/true);
-                index += 2;
-            } else {
-                result.heartRate = value.getUint8(index);
-                index += 1;
-            }
-            let contactDetected = flags & 0x2;
-            let contactSensorPresent = flags & 0x4;
-            if (contactSensorPresent) {
-                result.contactDetected = !!contactDetected;
-            }
-            let energyPresent = flags & 0x8;
-            if (energyPresent) {
-                result.energyExpended = value.getUint16(index, /*littleEndian=*/true);
-                index += 2;
-            }
-            let rrIntervalPresent = flags & 0x10;
-            if (rrIntervalPresent) {
-                let rrIntervals = [];
-                for (; index + 1 < value.byteLength; index += 2) {
-                    rrIntervals.push(value.getUint16(index, /*littleEndian=*/true));
-                }
-                result.rrIntervals = rrIntervals;
-            }
-            return result;
+            let oneByteValue = value.getUint8(0);
+            console.log('Notification value:', oneByteValue);
+
+            return oneByteValue;
         }
 
         /* Utils */
@@ -108,6 +99,6 @@
         }
     }
 
-    window.heartRateSensor = new HeartRateSensor();
+    window.bluetoothStreamService = new BluetoothStreamService();
 
 })();
