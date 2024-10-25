@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "*.ansi": "ansi",
+        "*.h": "c",
+        "*.c": "c"
+    }
+}
