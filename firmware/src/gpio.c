@@ -190,7 +190,7 @@ static void button_pressed(const struct device *dev, struct gpio_callback *cb, u
 	}
 
 	k_timer_start(&long_button_press_timer, K_SECONDS(18), K_NO_WAIT);
-	k_timer_start(&led_timer, K_SECONDS(5), K_NO_WAIT);
+	k_timer_start(&led_timer, K_SECONDS(1), K_NO_WAIT);
 
 	notify();
 
