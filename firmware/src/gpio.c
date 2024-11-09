@@ -4,6 +4,7 @@
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 
+#include "bt.h"
 #include "gpio.h"
 
 LOG_MODULE_REGISTER(gpio, LOG_LEVEL_INF);
@@ -190,6 +191,8 @@ static void button_pressed(const struct device *dev, struct gpio_callback *cb, u
 
 	k_timer_start(&long_button_press_timer, K_SECONDS(18), K_NO_WAIT);
 	k_timer_start(&led_timer, K_SECONDS(5), K_NO_WAIT);
+
+	notify();
 
 	configure_button_interrupt(button_released, false);
 }

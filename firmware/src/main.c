@@ -22,18 +22,15 @@
 #include <zephyr/types.h>
 
 #include "gpio.h"
-#include "hts.h"
 
-LOG_MODULE_REGISTER(tempsense, LOG_LEVEL_INF);
+LOG_MODULE_REGISTER(main, LOG_LEVEL_INF);
 
-#define MIN_ADV_INTERVAL 1999
-#define MAX_ADV_INTERVAL 2001
+#define MIN_ADV_INTERVAL 999
+#define MAX_ADV_INTERVAL 1001
 #define ADV_INTERVAL_MULTIPLIER 0.625
 
 static const struct bt_data ad[] = {
 	BT_DATA_BYTES(BT_DATA_FLAGS, (BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR)),
-	BT_DATA_BYTES(BT_DATA_UUID16_ALL, BT_UUID_16_ENCODE(BT_UUID_HTS_VAL),
-				  BT_UUID_16_ENCODE(BT_UUID_DIS_VAL)),
 };
 
 static struct bt_le_adv_param adv_param =
@@ -104,14 +101,5 @@ int main(void)
 
 	bt_conn_auth_cb_register(&auth_cb_display);
 
-	/* Implement indicate. At the moment there is no suitable way
-	 * of starting delayed work so we do it here
-	 */
-	while (1) {
-		k_sleep(K_SECONDS(1));
-
-		/* Temperature measurements simulation */
-		hts_indicate(gpio_get_temp());
-	}
 	return 0;
 }
