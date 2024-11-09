@@ -30,6 +30,7 @@ import { addTimestampToMessage } from './utils.js';
                 })
                 .catch(error => {
                     console.error(addTimestampToMessage('Error in connect(): ' + error));
+                    throw error;
                 });
         }
 
