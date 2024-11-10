@@ -1,6 +1,5 @@
 import { addTimestampToMessage } from './utils.js';
 
-var canvas = document.querySelector('canvas');
 var statusText = document.querySelector('#statusText');
 var clickCounter = 0;
 
@@ -11,7 +10,6 @@ const txCharacteristicUuid = 'a4de0202-a156-493c-83d8-845c40da5203';
 
 
 statusText.addEventListener('click', function () {
-    notifications = [];
     bluetoothStreamService.connect(deviceNamePrefix, serviceUuid)
         .then(() => {
             // Add event listener for device disconnection
@@ -36,9 +34,7 @@ statusText.addEventListener('click', function () {
 function handleNotification(notification) {
     notification.addEventListener('characteristicvaluechanged', event => {
         var notification = bluetoothStreamService.parseNotification(event.target.value);
-        statusText.innerHTML = notification + ' &#x2764;';
-        notifications.push(notification);
-        increaseClickCounter();
+        increaseClickCounter(notification);
     });
 }
 
@@ -47,9 +43,7 @@ function onDisconnected(event) {
     console.log(addTimestampToMessage('Disconnected from device'));
 }
 
-var notifications = [];
-
-function increaseClickCounter() {
+function increaseClickCounter(temperature) {
     clickCounter += 1;
-    statusText.textContent = 'Clicks: ' + clickCounter.toString();
+    statusText.innerHTML = 'Clicks: ' + clickCounter.toString() + '<br>Temperature: ' + temperature.toString() + ' °C';
 }

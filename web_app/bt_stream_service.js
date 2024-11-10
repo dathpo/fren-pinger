@@ -60,10 +60,11 @@ import { addTimestampToMessage } from './utils.js';
         parseNotification(value) {
             // In Chrome 50+, a DataView is returned instead of an ArrayBuffer.
             value = value.buffer ? value : new DataView(value);
-            let oneByteValue = value.getUint8(0);
-            console.log(addTimestampToMessage('Notification value: ' + oneByteValue));
 
-            return oneByteValue;
+            let floatValue = value.getFloat32(0, true);
+            console.log(addTimestampToMessage('Notification value: ' + floatValue));
+
+            return floatValue;
         }
 
         /* Utils */
