@@ -25,7 +25,10 @@ enum bt_send_status {
 static void on_tx_char_ccc_cfg_changed(const struct bt_gatt_attr *attr, uint16_t value);
 void notify_cb(struct k_work *work);
 
+static float latest_temp_reading;
+
 K_WORK_DEFINE(notify_work, notify_cb);
+K_MUTEX_DEFINE(temp_mutex);
 
 BT_GATT_SERVICE_DEFINE(auth_svc, BT_GATT_PRIMARY_SERVICE(BT_UUID_BUTTON_SERVICE),
 					   BT_GATT_CHARACTERISTIC(BT_UUID_BUTTON_TX_CHAR, // uuid
@@ -87,12 +90,21 @@ static void on_tx_char_ccc_cfg_changed(const struct bt_gatt_attr *attr, uint16_t
 
 void notify_cb(struct k_work *work)
 {
-	uint8_t data[1] = { 0 };
+	uint8_t data[sizeof(float)];
+
+	k_mutex_lock(&temp_mutex, K_FOREVER);
+	memcpy(data, &latest_temp_reading, sizeof(latest_temp_reading));
+	k_mutex_unlock(&temp_mutex);
+
 	(void)tx_char_send(NULL, data, sizeof(data));
 }
 
-void notify(void)
+void notify(float temp)
 {
+	k_mutex_lock(&temp_mutex, K_FOREVER);
+	latest_temp_reading = temp;
+	k_mutex_unlock(&temp_mutex);
+
 	int err = k_work_submit(&notify_work);
 	if (err < 0) {
 		LOG_ERR("Failed to submit work to generate the challenge, error %d", err);

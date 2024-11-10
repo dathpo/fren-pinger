@@ -183,7 +183,9 @@ static void button_pressed(const struct device *dev, struct gpio_callback *cb, u
 {
 	LOG_INF("Button pressed");
 
-	if (gpio_get_temp() >= TEMP_MILD) {
+	float temp = (float)gpio_get_temp();
+
+	if (temp >= TEMP_MILD) {
 		gpio_green_led_on();
 	} else {
 		gpio_amber_led_on();
@@ -192,7 +194,7 @@ static void button_pressed(const struct device *dev, struct gpio_callback *cb, u
 	k_timer_start(&long_button_press_timer, K_SECONDS(18), K_NO_WAIT);
 	k_timer_start(&led_timer, K_SECONDS(1), K_NO_WAIT);
 
-	notify();
+	notify(temp);
 
 	configure_button_interrupt(button_released, false);
 }

@@ -1,1 +1,1 @@
-void notify(void);
+void notify(float temp);
