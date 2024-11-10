@@ -1,11 +1,12 @@
 # Web Bluetooth Clicker
 
-A simple Web Bluetooth application combined with OTA-capable firmware that streams button press notifications to a connected device. This project showcases a web app that connects via Bluetooth to the firmware-enabled device, counts each button click, and displays the tally in real-time.
+A simple Web Bluetooth application combined with OTA-capable firmware that streams temperature notifications on button press. The web app connects to the device, displays the latest temperature reading, and maintains a real-time click count.
 
 ## Features
 
 - **Web Bluetooth Connectivity**: Easily connect the web app to a compatible Bluetooth device.
-- **Click Counter**: Each button press on the device is streamed as a notification, and the web app displays an updated click count.
+- **Temperature Notifications**: Each button press on the device triggers a notification with the current temperature, which the web app displays in real-time.
+- **Click Counter**: The web app tracks the number of button presses and updates the click count alongside the temperature.
 - **OTA-Capable Firmware**: The firmware allows for over-the-air updates, making it easy to add improvements.
 
 ## Demo
@@ -29,4 +30,4 @@ A simple Web Bluetooth application combined with OTA-capable firmware that strea
 
 1. Open the web app in your browser.
 1. Click the "Connect" button and select your Bluetooth device.
-1. Start pressing the button on the device. Each click will be counted and displayed on the web app.
+1. Press the button on the device. Each press will stream the current temperature as a notification, which will be displayed on the web app. The web app also updates the click count independently.
