@@ -23,9 +23,10 @@ enum bt_send_status {
 };
 
 static void on_tx_char_ccc_cfg_changed(const struct bt_gatt_attr *attr, uint16_t value);
-void notify_cb(struct k_work *work);
+static void notify_cb(struct k_work *work);
 
 static float latest_temp_reading;
+static double (*on_subscribe_cb)(void) = NULL;
 
 K_WORK_DEFINE(notify_work, notify_cb);
 K_MUTEX_DEFINE(temp_mutex);
@@ -78,6 +79,7 @@ static void on_tx_char_ccc_cfg_changed(const struct bt_gatt_attr *attr, uint16_t
 	switch (status) {
 	case BT_SEND_ENABLED:
 		LOG_INF("Notifications enabled");
+		bt_notify(on_subscribe_cb());
 		break;
 	case BT_SEND_DISABLED:
 		LOG_INF("Notifications disabled");
@@ -88,7 +90,7 @@ static void on_tx_char_ccc_cfg_changed(const struct bt_gatt_attr *attr, uint16_t
 	}
 }
 
-void notify_cb(struct k_work *work)
+static void notify_cb(struct k_work *work)
 {
 	uint8_t data[sizeof(float)];
 
@@ -99,7 +101,12 @@ void notify_cb(struct k_work *work)
 	(void)tx_char_send(NULL, data, sizeof(data));
 }
 
-void notify(float temp)
+void bt_init(double (*on_subscribe)(void))
+{
+	on_subscribe_cb = on_subscribe;
+}
+
+void bt_notify(double temp)
 {
 	k_mutex_lock(&temp_mutex, K_FOREVER);
 	latest_temp_reading = temp;

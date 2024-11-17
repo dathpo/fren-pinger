@@ -6,6 +6,7 @@
 
 #include "bt.h"
 #include "gpio.h"
+#include "temp.h"
 
 LOG_MODULE_REGISTER(gpio, LOG_LEVEL_INF);
 
@@ -14,7 +15,6 @@ LOG_MODULE_REGISTER(gpio, LOG_LEVEL_INF);
 
 #define GREEN_LED_PWM_PCT 100U
 #define AMBER_LED_PWM_PCT 30U
-#define TEMP_MILD 20U
 
 enum led_colour {
 	LED_OFF,
@@ -36,7 +36,6 @@ static const struct gpio_dt_spec button_node = GPIO_DT_SPEC_GET(BUTTON_NODE, gpi
 static const struct pwm_dt_spec green_pwm_led = PWM_DT_SPEC_GET(DT_NODELABEL(green_led_pwm));
 static const struct pwm_dt_spec amber_pwm_led = PWM_DT_SPEC_GET(DT_NODELABEL(yellow_led_pwm));
 static const struct device *pwm_leds_dev = DEVICE_DT_GET(DT_PARENT(DT_NODELABEL(green_led_pwm)));
-static const struct device *temp_dev = DEVICE_DT_GET_ANY(nordic_nrf_temp);
 static struct gpio_callback button_cb_data;
 static const struct gpio_dt_spec pwr_kill_pin = GPIO_DT_SPEC_GET(POWER_KILL_PIN, gpios);
 
@@ -107,12 +106,6 @@ void gpio_init(void)
 {
 	configure_button(&button_node);
 	configure_leds();
-
-	if (temp_dev == NULL || !device_is_ready(temp_dev)) {
-		LOG_WRN("no temperature device");
-	} else {
-		LOG_INF("temp device is %p, name is %s", temp_dev, temp_dev->name);
-	}
 }
 
 int gpio_green_led_on(void)
@@ -159,31 +152,11 @@ int gpio_amber_led_off(void)
 	return err;
 }
 
-double gpio_get_temp(void)
-{
-	struct sensor_value temp_value;
-
-	int err = sensor_sample_fetch(temp_dev);
-	if (err) {
-		LOG_INF("sensor_sample_fetch failed return: %d", err);
-	}
-
-	err = sensor_channel_get(temp_dev, SENSOR_CHAN_DIE_TEMP, &temp_value);
-	if (err) {
-		LOG_INF("sensor_channel_get failed return: %d", err);
-	}
-
-	double temp = sensor_value_to_double(&temp_value);
-	LOG_INF("temperature is %gC", temp);
-
-	return temp;
-}
-
 static void button_pressed(const struct device *dev, struct gpio_callback *cb, uint32_t pins)
 {
 	LOG_INF("Button pressed");
 
-	float temp = (float)gpio_get_temp();
+	float temp = (float)temp_get();
 
 	if (temp >= TEMP_MILD) {
 		gpio_green_led_on();
@@ -194,7 +167,7 @@ static void button_pressed(const struct device *dev, struct gpio_callback *cb, u
 	k_timer_start(&long_button_press_timer, K_SECONDS(18), K_NO_WAIT);
 	k_timer_start(&led_timer, K_SECONDS(1), K_NO_WAIT);
 
-	notify(temp);
+	bt_notify(temp);
 
 	configure_button_interrupt(button_released, false);
 }

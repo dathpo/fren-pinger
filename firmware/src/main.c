@@ -21,7 +21,9 @@
 #include <zephyr/sys/printk.h>
 #include <zephyr/types.h>
 
+#include "bt.h"
 #include "gpio.h"
+#include "temp.h"
 
 LOG_MODULE_REGISTER(main, LOG_LEVEL_INF);
 
@@ -90,6 +92,8 @@ int main(void)
 	int err;
 
 	gpio_init();
+	temp_init();
+	bt_init(temp_get);
 
 	err = bt_enable(NULL);
 	if (err) {
